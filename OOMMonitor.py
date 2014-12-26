@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 '''
 Created on 2014年11月18日
 
@@ -252,7 +253,7 @@ class OOMMonitor(win32serviceutil.ServiceFramework):
             time.sleep(2)
             timecounting += 2
             if timecounting > 10:
-                #针对eclipse等ide开发工具占用nis服务的tomcat
+                # 针对eclipse等ide开发工具占用nis服务的tomcat
                 if self.is_process_exist("javaw.exe"):
                     self.kill("javaw.exe")
                     os.popen("sc start %s" % name).read()
@@ -263,7 +264,7 @@ class OOMMonitor(win32serviceutil.ServiceFramework):
                 sys.exit(-1)
                 
             if "RUNNING" in result:
-                time.sleep(5)
+                time.sleep(10)
                 result = os.popen("sc query %s" % name).read()
                 
         self.logger.info("The service %s started success." % name)
