@@ -15,6 +15,7 @@ import glob
 import re, ntpath
 import configparser
 import urllib.request
+import codecs
 from bs4 import BeautifulSoup
 
 class OOMMonitor(win32serviceutil.ServiceFramework):
@@ -152,7 +153,8 @@ class OOMMonitor(win32serviceutil.ServiceFramework):
     parameter：filename 检测的文件名
     '''
     def checkoom(self, filename):
-        nislog = open(filename, 'r')
+#         nislog = open(filename, 'r')
+        nislog = codecs.open(filename,'r','GB18030',errors='ignore')
         flag = False
         try:
             for line in nislog:
