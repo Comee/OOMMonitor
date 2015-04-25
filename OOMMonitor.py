@@ -27,7 +27,7 @@ class OOMMonitor(win32serviceutil.ServiceFramework):
     python OOMMonitor.py start                   启动服务
     python OOMMonitor.py restart                 重启服务
     python OOMMonitor.py stop                    停止服务
-    python PythonService.py remove               删除/卸载服务
+    python OOMMonitor.py remove               删除/卸载服务
     '''
     # 服务名  
     _svc_name_ = "OOMMonitor"  
@@ -54,8 +54,8 @@ class OOMMonitor(win32serviceutil.ServiceFramework):
         self.std_log = 'stdout_*.log'  # 日志文件名格式
         self.hprof = '*.hprof'
         self.backupname = ""  # 压缩文件路径和名字前缀，用于java日志备份
-        self.imagename = ""
-        self.oomrunurl = ""
+        self.imagename = "" #进程映像名
+        self.oomrunurl = "" #重新加载数据的url
         
         # 日志配置 若为0 则只产生一个日志文件，且backupCount失效
         self.maxMegabytes = 10
