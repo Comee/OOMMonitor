@@ -319,7 +319,7 @@ class OOMMonitor(win32serviceutil.ServiceFramework):
         self.checkoom(r"%s\%s" % (self.basedir, fname))
     
     '''
-    description:获取结径的结尾
+    description:获取路径的结尾
     '''
     def path_leaf(self, path):
         head, tail = ntpath.split(path)
