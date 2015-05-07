@@ -116,18 +116,20 @@ class OOMMonitor(win32serviceutil.ServiceFramework):
     log_new_line = '\n==============================='
     # 日志输出的默认格式
     log_formatter = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
+    # nis 里程碑版本号（ nis 12.7.0.4 及其以后版本增加了oomrunurl这个属性）
+    nis_version = "12.7.0.3"  
+    # 基本配置  App版本号
+    version = 1.1
+    # 基本配置 App状态
+    is_alive = True
+    # Create an event which we will use to wait on.
+    # The "service stop" request will set this event.
+    h_wait_stop = win32event.CreateEvent(None, 0, 0, None)
 
 
     def __init__(self, args):
         win32serviceutil.ServiceFramework.__init__(self, args)
-        # Create an event which we will use to wait on.
-        # The "service stop" request will set this event.
-        self.h_wait_stop = win32event.CreateEvent(None, 0, 0, None)
-        self.is_alive = True
 
-        # 基本配置
-        self.version = 1.1
-        self.nis_version = "12.7.0.3"  # nis版本
         self.breaktime = 2400  # while最长循环时间
         self.oompatterns = "java.lang.OutOfMemoryError"  # 内存溢出检测模式，| 分隔
         self.servicename = "nis"  # 监测服务名
@@ -180,7 +182,8 @@ class OOMMonitor(win32serviceutil.ServiceFramework):
         handler = handlers.RotatingFileHandler(current_dir,
                                                maxBytes=int(self.max_megabytes) * 1024 * 1024,
                                                backupCount=int(self.backup_count))
-        formatter = logging.Formatter(self.log_formatter, '%Y-%m-%d %H:%M:%S')
+        # formatter = logging.Formatter(self.log_formatter, '%Y-%m-%d %H:%M:%S')
+        formatter = logging.Formatter(self.log_formatter)
         handler.setFormatter(formatter)
 
         logger.addHandler(handler)
@@ -407,11 +410,19 @@ class OOMMonitor(win32serviceutil.ServiceFramework):
             self.logger.info("配置文件为：%s", configfile)
             section = config.sections().pop()
             # 通过配置文件赋值
+            # self.logger.info(self.__dict__)
             for key in config[section]:
+                # self.logger.info("%s in self", (key in self.__dict__))
                 if key in self.__dict__:
                     self.setattr(key, config[section][key])
             #日志的配置文件更新，从新获取logging
-            self.logger = self.get_logger()
+            current_dir = os.path.join(os.path.split(sys.path[0])[0], "oommonitor.log")
+            handler = handlers.RotatingFileHandler(current_dir,
+                                                   maxBytes=int(self.max_megabytes) * 1024 * 1024,
+                                                   backupCount=int(self.backup_count))
+            formatter = logging.Formatter(self.log_formatter)
+            handler.setFormatter(formatter)
+            self.logger.handlers[0] = handler
 
         # 系统内部自动赋值
         result = os.popen("sc qc %s" % self.servicename).read()
