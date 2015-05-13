@@ -1,7 +1,7 @@
 '''
 Created on 2014年11月19日
 
-@author: Leo
+@author: Comee
 '''
 from distutils.core import setup
 import py2exe
