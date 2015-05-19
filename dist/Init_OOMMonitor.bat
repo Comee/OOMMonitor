@@ -5,7 +5,6 @@ CD /D "%~dp0"
 
 cls
 
-
 ::管理员账户
 :: whoami /user |find "-500" >nul 2>nul
 ::if not errorlevel 1 (goto AdministratorAccount) else goto OtherAccount
