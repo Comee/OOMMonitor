@@ -117,7 +117,7 @@ class OOMMonitor(win32serviceutil.ServiceFramework):
     # 日志输出的默认格式
     log_formatter = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
     # nis 里程碑版本号（ nis 12.7.0.4 及其以后版本增加了oomrunurl这个属性）
-    nis_version = "12.7.0.3"  
+    landmark_nis_version = "12.7.0.3"  
     # 基本配置  App版本号
     version = 1.1
     # 基本配置 App状态
@@ -139,6 +139,7 @@ class OOMMonitor(win32serviceutil.ServiceFramework):
         self.backupname = ""  # 压缩文件路径和名字前缀，用于java日志备份
         self.imagename = "" #进程映像名
         self.oomrunurl = "" #重新加载数据的url
+        self.nis_version = "" #当前系统版本号
 
         # 日志配置 若为0 则只产生一个日志文件，且backup_count失效
         self.max_megabytes = 10
@@ -406,7 +407,7 @@ class OOMMonitor(win32serviceutil.ServiceFramework):
             self.logger.error("配置文件配置错误！不允许多个配置项！CODE:%s%s",
                               len(config.sections()), self.log_new_line)
             sys.exit(-1)
-        else:
+        elif len(config.sections()) == 1:
             self.logger.info("配置文件为：%s", configfile)
             section = config.sections().pop()
             # 通过配置文件赋值
@@ -424,7 +425,7 @@ class OOMMonitor(win32serviceutil.ServiceFramework):
             handler.setFormatter(formatter)
             self.logger.handlers[0] = handler
 
-        # 系统内部自动赋值
+        # 系统内部自动赋值，即使通过配置文件设置，也要进行其他配置项的修复
         result = os.popen("sc qc %s" % self.servicename).read()
         binary_path_name = re.findall(r'([a-zA-Z]:(\\[\sA-Za-z0-9_\.-]*)+)', result)
 
@@ -439,12 +440,13 @@ class OOMMonitor(win32serviceutil.ServiceFramework):
         if len(self.backupname) == 0:
             self.backupname = r"%s" % (tomcat_home + "\\nis-logs")
 
-        version_and_nisurl = parse_orcus_web_xml(tomcat_home +
+        if len(self.nis_version) == 0:
+            version_and_nisurl = parse_orcus_web_xml(tomcat_home +
                                                  "\\webapps\\nis\\WEB-INF\\orcus_web.xml")
-        self.nis_version = version_and_nisurl[0]
-        if compare_to(self.nis_version, "12.7.0.3") > 0:
-            if len(self.oomrunurl) == 0:
-                self.oomrunurl = version_and_nisurl[1] + "oomrun"
+            self.nis_version = version_and_nisurl[0]
+            if compare_to(self.nis_version, self.landmark_nis_version) > 0:
+                if len(self.oomrunurl) == 0:
+                    self.oomrunurl = version_and_nisurl[1] + "oomrun"
 
     def setattr(self, name, value):
         '''
